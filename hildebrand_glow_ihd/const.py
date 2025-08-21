@@ -1,4 +1,3 @@
-from itertools import cycle, islice
 from typing import Final
 from enum import Enum
 
@@ -22,7 +21,7 @@ CONF_TOPIC_PREFIX = "topic_prefix"
 CONF_GAS_UNITS = "gas_units"
 
 DEFAULT_DEVICE_ID = "+"
-DEFAULT_TOPIC_PREFIX= "glow"
+DEFAULT_TOPIC_PREFIX = "glow"
 DEFAULT_GAS_UNITS = "kWh"
 GAS_UNITS_OPTIONS = ["kWh", "m³"]
 

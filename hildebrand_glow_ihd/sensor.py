@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 from datetime import datetime, time, timedelta, tzinfo
-from enum import Enum
 import json
 import logging
 import re
@@ -37,7 +36,6 @@ from .const import (
     DEFAULT_GAS_UNITS,
     DEFAULT_TOPIC_PREFIX,
     DOMAIN,
-    GAS_UNITS_OPTIONS,
     MeterInterval,
 )
 
