@@ -6,7 +6,7 @@ from typing import Any
 
 from awesomeversion.awesomeversion import AwesomeVersion
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import __version__ as HA_VERSION, CONF_DEVICE_ID  # noqa: N812
+from homeassistant.const import Platform, __version__ as HA_VERSION, CONF_DEVICE_ID  # noqa: N812
 from homeassistant.core import HomeAssistant
 
 from .const import (
@@ -23,7 +23,7 @@ from .util import normalize_device_id, normalize_topic_prefix
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
