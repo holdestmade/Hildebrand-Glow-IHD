@@ -1,12 +1,13 @@
 """Support for hildebrand glow MQTT sensors."""
 
 from __future__ import annotations
+from collections.abc import Iterable
 from datetime import datetime, time, timedelta, tzinfo
 import json
 import logging
 import re
-from typing import Any, Iterable
-from zoneinfo import ZoneInfo
+from typing import Any
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.models import ReceiveMessage
@@ -27,14 +28,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
+from homeassistant.util import dt as dt_util, slugify
 
 from .const import (
     CONF_GAS_UNITS,
     CONF_TIME_ZONE_ELECTRICITY,
     CONF_TIME_ZONE_GAS,
     CONF_TOPIC_PREFIX,
-    DEFAULT_DEVICE_ID,
     DEFAULT_GAS_UNITS,
     DEFAULT_TOPIC_PREFIX,
     DOMAIN,
@@ -186,10 +186,10 @@ ELECTRICITY_SENSORS = [
         "icon": "mdi:cash",
         "meter_interval": MeterInterval.DAY,
         "func": lambda js: round(
-            js["electricitymeter"]["energy"]["import"]["price"]["standingcharge"]
+            (js["electricitymeter"]["energy"]["import"]["price"]["standingcharge"] or 0)
             + (
-                js["electricitymeter"]["energy"]["import"]["day"]
-                * js["electricitymeter"]["energy"]["import"]["price"]["unitrate"]
+                (js["electricitymeter"]["energy"]["import"]["day"] or 0)
+                * (js["electricitymeter"]["energy"]["import"]["price"]["unitrate"] or 0)
             ),
             2,
         ),
@@ -313,42 +313,45 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Smart Meter sensors."""
 
-    device_mac = hass.data[DOMAIN][config_entry.entry_id][CONF_DEVICE_ID]
-    topic_prefix = hass.data[DOMAIN][config_entry.entry_id].get(CONF_TOPIC_PREFIX, DEFAULT_TOPIC_PREFIX)
-    time_zone_electricity = hass.data[DOMAIN][config_entry.entry_id][CONF_TIME_ZONE_ELECTRICITY]
-    time_zone_gas = hass.data[DOMAIN][config_entry.entry_id][CONF_TIME_ZONE_GAS]
-    gas_units_config = hass.data[DOMAIN][config_entry.entry_id].get(CONF_GAS_UNITS, DEFAULT_GAS_UNITS)
+    entry_data = hass.data[DOMAIN][config_entry.entry_id]
+    device_mac = entry_data[CONF_DEVICE_ID]
+    topic_prefix = entry_data.get(CONF_TOPIC_PREFIX, DEFAULT_TOPIC_PREFIX)
+    time_zone_electricity = entry_data[CONF_TIME_ZONE_ELECTRICITY]
+    time_zone_gas = entry_data[CONF_TIME_ZONE_GAS]
+    gas_units_config = entry_data.get(CONF_GAS_UNITS, DEFAULT_GAS_UNITS)
 
     device_update_groups = {}
 
     async def mqtt_message_received(message: ReceiveMessage):
         """Handle received MQTT message."""
         topic = message.topic
-        payload = message.payload
-        try:
-            device_id = topic.split("/")[1]
-        except IndexError:
+        # Topics look like <prefix>/<device_id>/STATE or <prefix>/<device_id>/SENSOR/...
+        topic_parts = topic[len(topic_prefix) + 1 :].split("/")
+        if len(topic_parts) < 2 or topic_parts[1] not in ("STATE", "SENSOR"):
             _LOGGER.debug("Received message on unexpected topic: %s", topic)
             return
+        device_id = topic_parts[0]
 
-        if device_mac == DEFAULT_DEVICE_ID or device_id == device_mac:
-            update_groups = await async_get_device_groups(
-                device_update_groups,
-                async_add_entities,
-                device_id,
-                time_zone_electricity,
-                time_zone_gas,
-                topic_prefix,
-                gas_units_config,
-            )
-            _LOGGER.debug("Received message: %s", topic)
-            _LOGGER.debug("  Payload: %s", payload)
-            for update_group in update_groups:
-                update_group.process_update(message)
+        update_groups = await async_get_device_groups(
+            device_update_groups,
+            async_add_entities,
+            device_id,
+            time_zone_electricity,
+            time_zone_gas,
+            topic_prefix,
+            gas_units_config,
+        )
+        _LOGGER.debug("Received message: %s", topic)
+        _LOGGER.debug("  Payload: %s", message.payload)
+        for update_group in update_groups:
+            update_group.process_update(message)
 
-    data_topic = f"{topic_prefix}/#"
+    # Let the broker filter for the configured device ("+" subscribes to all)
+    data_topic = f"{topic_prefix}/{device_mac}/#"
 
-    await mqtt.async_subscribe(hass, data_topic, mqtt_message_received, 1)
+    config_entry.async_on_unload(
+        await mqtt.async_subscribe(hass, data_topic, mqtt_message_received, 1)
+    )
 
 
 async def async_get_device_groups(
@@ -466,7 +469,15 @@ class HildebrandGlowMqttSensor(SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         self._device_id = device_id
-        self._time_zone = time_zone
+        self._zone_info: tzinfo | None = None
+        if time_zone:
+            try:
+                self._zone_info = ZoneInfo(time_zone)
+            except (ZoneInfoNotFoundError, ValueError):
+                _LOGGER.warning(
+                    "Unknown time zone %s, falling back to the Home Assistant time zone",
+                    time_zone,
+                )
         self._attr_name = name
         self._attr_icon = icon
 
@@ -520,7 +531,7 @@ class HildebrandGlowMqttSensor(SensorEntity):
             last_reset = meter_midnight.replace(day=1)
         elif meter_interval == MeterInterval.YEAR:
             last_reset = meter_midnight.replace(day=1, month=1)
-        return last_reset.astimezone(ZoneInfo("UTC"))
+        return last_reset.astimezone(dt_util.UTC)
 
     @staticmethod
     def get_message_datetime(mqtt_data) -> datetime:
@@ -545,10 +556,8 @@ class HildebrandGlowMqttSensor(SensorEntity):
             return
         self._attr_native_value = new_value
 
-        zone_info = None
-        if self._time_zone:
-            zone_info = ZoneInfo(self._time_zone)
-        elif self.hass is not None and self.hass.config is not None:
+        zone_info = self._zone_info
+        if zone_info is None and self.hass is not None and self.hass.config is not None:
             zone_info = ZoneInfo(self.hass.config.time_zone)
 
         if zone_info and self._last_reset_reported and self._meter_interval:
