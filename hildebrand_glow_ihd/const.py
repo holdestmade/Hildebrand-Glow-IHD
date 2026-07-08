@@ -2,7 +2,6 @@ from typing import Final
 from enum import Enum
 
 DOMAIN: Final = "hildebrand_glow_ihd"
-MIN_HA_VERSION = "2025.10.0"
 
 CONF_TIME_ZONE_ELECTRICITY = "time_zone_electricity"
 CONF_TIME_ZONE_GAS = "time_zone_gas"
