@@ -5,9 +5,11 @@ import logging
 from typing import Any
 
 from awesomeversion.awesomeversion import AwesomeVersion
+from homeassistant.components import mqtt
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform, __version__ as HA_VERSION, CONF_DEVICE_ID  # noqa: N812
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
     CONF_GAS_UNITS,
@@ -39,8 +41,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         _LOGGER.critical(msg)
         return False
 
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
 
     return True
 
@@ -50,13 +51,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug("Setting up Hildebrand Glow IHD MQTT integration")
 
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
+    if not await mqtt.async_wait_for_mqtt_client(hass):
+        raise ConfigEntryNotReady("MQTT integration is not available")
 
-    if entry.entry_id not in hass.data[DOMAIN]:
-        hass.data[DOMAIN][entry.entry_id] = {}
-
-    entry_data = hass.data[DOMAIN][entry.entry_id]
+    entry_data = hass.data.setdefault(DOMAIN, {}).setdefault(entry.entry_id, {})
 
     # Merge options over data so that options always win
     merged_entry: dict[str, Any] = {**entry.data, **entry.options}

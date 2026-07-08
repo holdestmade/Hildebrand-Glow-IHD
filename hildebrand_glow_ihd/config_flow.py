@@ -147,7 +147,7 @@ class HildebrandGlowIHDMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry: ConfigEntry):
         """Get the options flow for this handler."""
 
-        return HildebrandGlowIHDMQTTOptionsFlowHandler(config_entry)
+        return HildebrandGlowIHDMQTTOptionsFlowHandler()
 
 
 class HildebrandGlowIHDMQTTOptionsFlowHandler(OptionsFlow):
