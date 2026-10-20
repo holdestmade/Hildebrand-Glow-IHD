@@ -5,7 +5,6 @@ from collections.abc import Iterable
 from datetime import datetime, time, timedelta, tzinfo
 import json
 import logging
-import re
 from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -21,12 +20,13 @@ from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_DEVICE_ID,
     SIGNAL_STRENGTH_DECIBELS,
+    EntityCategory,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
@@ -370,18 +370,18 @@ async def async_get_device_groups(
         groups = [
             HildebrandGlowMqttSensorUpdateGroup(
                 device_id=device_id,
-                topic_regex="STATE",
+                topic_suffix="/STATE",
                 meters=STATE_SENSORS,
             ),
             HildebrandGlowMqttSensorUpdateGroup(
                 device_id=device_id,
-                topic_regex="electricitymeter",
+                topic_suffix="/SENSOR/electricitymeter",
                 meters=ELECTRICITY_SENSORS,
                 time_zone=time_zone_electricity,
             ),
             HildebrandGlowMqttSensorUpdateGroup(
                 device_id=device_id,
-                topic_regex="gasmeter",
+                topic_suffix="/SENSOR/gasmeter",
                 meters=GAS_SENSORS,
                 time_zone=time_zone_gas,
                 gas_units_config=gas_units_config,
@@ -405,13 +405,13 @@ class HildebrandGlowMqttSensorUpdateGroup:
     def __init__(
         self,
         device_id: str,
-        topic_regex: str,
+        topic_suffix: str,
         meters: Iterable,
         time_zone: str | None = None,
         gas_units_config: str | None = None,
     ) -> None:
         """Initialize the sensor collection."""
-        self._topic_regex = re.compile(topic_regex)
+        self._topic_suffix = topic_suffix
         self._sensors = [
             HildebrandGlowMqttSensor(
                 device_id=device_id,
@@ -426,8 +426,8 @@ class HildebrandGlowMqttSensorUpdateGroup:
         """Process an update from the MQTT broker."""
         topic = message.topic
         payload = message.payload
-        if self._topic_regex.search(topic):
-            _LOGGER.debug("Matched on %s", self._topic_regex.pattern)
+        if topic.endswith(self._topic_suffix):
+            _LOGGER.debug("Matched on %s", self._topic_suffix)
             try:
                 parsed_data = json.loads(payload)
                 for sensor in self._sensors:

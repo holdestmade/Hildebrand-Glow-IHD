@@ -1,5 +1,8 @@
 # Hildebrand Glow IHD MQTT Home Assistant Integration
 
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/)
+[![Validate](https://github.com/holdestmade/Hildebrand-Glow-IHD/actions/workflows/validate.yml/badge.svg)](https://github.com/holdestmade/Hildebrand-Glow-IHD/actions/workflows/validate.yml)
+
 This repository contains a custom [Home Assistant](https://www.home-assistant.io/) integration that exposes the telemetry published by a Hildebrand Glow In-Home Display (IHD) over MQTT.  It parses the topics emitted by the Glow IHD and creates Home Assistant sensors for electricity and gas consumption, device status, and supporting metadata.
 
 ## Features
@@ -11,8 +14,27 @@ This repository contains a custom [Home Assistant](https://www.home-assistant.io
 
 ## Installation
 
-1. Copy the `hildebrand_glow_ihd` directory into your Home Assistant `custom_components` folder.
-2. Restart Home Assistant to load the integration.
+### HACS (recommended)
+
+This integration is not in the HACS default store, so add it as a custom repository:
+
+1. Make sure [HACS](https://hacs.xyz/docs/use/) is installed in your Home Assistant instance.
+2. In Home Assistant, open **HACS**, then select the **⋮** menu in the top-right corner and choose **Custom repositories**.
+3. Enter `https://github.com/holdestmade/Hildebrand-Glow-IHD` as the repository and select **Integration** as the type, then select **Add**.
+4. Search HACS for **Hildebrand Glow IHD MQTT**, open it and select **Download**.
+5. Restart Home Assistant.
+
+Or use this button to open the repository in HACS directly:
+
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=holdestmade&repository=Hildebrand-Glow-IHD&category=integration)
+
+Updates are offered through HACS whenever a new release is published.
+
+### Manual
+
+1. Download this repository.
+2. Copy the `custom_components/hildebrand_glow_ihd` directory into the `custom_components` folder of your Home Assistant configuration directory (create the folder if it does not exist).
+3. Restart Home Assistant.
 
 ## Configuration
 
@@ -21,9 +43,11 @@ This repository contains a custom [Home Assistant](https://www.home-assistant.io
 3. Search for **Hildebrand Glow IHD MQTT** and follow the on-screen prompts.
 4. Provide the Glow device ID (defaults to `+` for broadcast), the MQTT topic prefix (defaults to `glow`), select appropriate time zones for electricity and gas data, and choose the desired gas units.
 
+These settings can be changed later from the integration's **Configure** button.
+
 ## Requirements
 
 - Home Assistant 2025.10.0 or newer.
 - An operational MQTT broker receiving Glow IHD telemetry.
 
-For issues or feature requests, please use the [GitHub issue tracker](https://github.com/megakid/ha_hildebrand_glow_ihd_mqtt/issues).
+For issues or feature requests, please use the [GitHub issue tracker](https://github.com/holdestmade/Hildebrand-Glow-IHD/issues).
