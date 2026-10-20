@@ -9,7 +9,7 @@ This repository contains a custom [Home Assistant](https://www.home-assistant.io
 
 - Native Home Assistant config flow for setting up the integration from the UI.
 - Supports customising the MQTT topic prefix, device ID, and per-fuel time zones.
-- Handles both electricity and gas metrics, including configurable gas units (kWh or m³).
+- Handles both electricity and gas metrics, with gas reported in both kWh and m³.
 - Depends on the core MQTT integration and listens for locally published updates (`iot_class: local_push`).
 
 ## Installation
@@ -41,7 +41,7 @@ Updates are offered through HACS whenever a new release is published.
 1. Ensure the MQTT integration is configured and receiving messages from your Glow IHD.
 2. In Home Assistant, go to **Settings → Devices & Services → Add Integration**.
 3. Search for **Hildebrand Glow IHD MQTT** and follow the on-screen prompts.
-4. Provide the Glow device ID (defaults to `+` for broadcast), the MQTT topic prefix (defaults to `glow`), select appropriate time zones for electricity and gas data, and choose the desired gas units.
+4. Provide the Glow device ID (defaults to `+` for broadcast), the MQTT topic prefix (defaults to `glow`), and select appropriate time zones for electricity and gas data.
 
 These settings can be changed later from the integration's **Configure** button.
 
@@ -51,3 +51,7 @@ These settings can be changed later from the integration's **Configure** button.
 - An operational MQTT broker receiving Glow IHD telemetry.
 
 For issues or feature requests, please use the [GitHub issue tracker](https://github.com/holdestmade/Hildebrand-Glow-IHD/issues).
+
+## License
+
+Released under the [MIT License](LICENSE). Originally based on [megakid/ha_hildebrand_glow_ihd_mqtt](https://github.com/megakid/ha_hildebrand_glow_ihd_mqtt).
