@@ -5,7 +5,6 @@ from collections.abc import Iterable
 from datetime import datetime, time, timedelta, tzinfo
 import json
 import logging
-import re
 from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -16,30 +15,27 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_DEVICE_ID,
     SIGNAL_STRENGTH_DECIBELS,
+    EntityCategory,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
 from .const import (
-    CONF_GAS_UNITS,
     CONF_TIME_ZONE_ELECTRICITY,
     CONF_TIME_ZONE_GAS,
     CONF_TOPIC_PREFIX,
-    DEFAULT_GAS_UNITS,
-    DEFAULT_TOPIC_PREFIX,
-    DOMAIN,
     MeterInterval,
 )
+from . import GlowConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -152,7 +148,7 @@ ELECTRICITY_SENSORS = [
         "name": "Smart Meter Electricity: Import Unit Rate",
         "device_class": SensorDeviceClass.MONETARY,
         "unit_of_measurement": "GBP/kWh",
-        "state_class": SensorStateClass.TOTAL,
+        "state_class": None,
         "icon": "mdi:cash",
         "func": lambda js: js["electricitymeter"]["energy"]["import"]["price"][
             "unitrate"
@@ -163,7 +159,7 @@ ELECTRICITY_SENSORS = [
         "name": "Smart Meter Electricity: Import Standing Charge",
         "device_class": SensorDeviceClass.MONETARY,
         "unit_of_measurement": "GBP",
-        "state_class": SensorStateClass.TOTAL,
+        "state_class": None,
         "icon": "mdi:cash",
         "func": lambda js: js["electricitymeter"]["energy"]["import"]["price"][
             "standingcharge"
@@ -214,7 +210,6 @@ GAS_SENSORS = [
         "icon": "mdi:fire",
         "func": lambda js: js["gasmeter"]["energy"]["import"]["cumulativevol"],
         "ignore_zero_values": True,
-        "is_volume_sensor": True,
     },
     {
         "name": "Smart Meter Gas: Import Vol (Today)",
@@ -223,7 +218,6 @@ GAS_SENSORS = [
         "state_class": SensorStateClass.TOTAL_INCREASING,
         "icon": "mdi:fire",
         "func": lambda js: js["gasmeter"]["energy"]["import"]["dayvol"],
-        "is_volume_sensor": True,
     },
     {
         "name": "Smart Meter Gas: Import Vol (This week)",
@@ -232,7 +226,6 @@ GAS_SENSORS = [
         "state_class": SensorStateClass.TOTAL_INCREASING,
         "icon": "mdi:fire",
         "func": lambda js: js["gasmeter"]["energy"]["import"]["weekvol"],
-        "is_volume_sensor": True,
     },
     {
         "name": "Smart Meter Gas: Import Vol (This month)",
@@ -241,7 +234,6 @@ GAS_SENSORS = [
         "state_class": SensorStateClass.TOTAL_INCREASING,
         "icon": "mdi:fire",
         "func": lambda js: js["gasmeter"]["energy"]["import"]["monthvol"],
-        "is_volume_sensor": True,
     },
     {
         "name": "Smart Meter Gas: Import (Today)",
@@ -271,7 +263,7 @@ GAS_SENSORS = [
         "name": "Smart Meter Gas: Import Unit Rate",
         "device_class": SensorDeviceClass.MONETARY,
         "unit_of_measurement": "GBP/kWh",
-        "state_class": SensorStateClass.TOTAL,
+        "state_class": None,
         "icon": "mdi:cash",
         "func": lambda js: js["gasmeter"]["energy"]["import"]["price"]["unitrate"],
         "ignore_zero_values": True,
@@ -280,7 +272,7 @@ GAS_SENSORS = [
         "name": "Smart Meter Gas: Import Standing Charge",
         "device_class": SensorDeviceClass.MONETARY,
         "unit_of_measurement": "GBP",
-        "state_class": SensorStateClass.TOTAL,
+        "state_class": None,
         "icon": "mdi:cash",
         "func": lambda js: js["gasmeter"]["energy"]["import"]["price"][
             "standingcharge"
@@ -308,17 +300,16 @@ GAS_SENSORS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: GlowConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Smart Meter sensors."""
 
-    entry_data = hass.data[DOMAIN][config_entry.entry_id]
+    entry_data = config_entry.runtime_data
     device_mac = entry_data[CONF_DEVICE_ID]
-    topic_prefix = entry_data.get(CONF_TOPIC_PREFIX, DEFAULT_TOPIC_PREFIX)
+    topic_prefix = entry_data[CONF_TOPIC_PREFIX]
     time_zone_electricity = entry_data[CONF_TIME_ZONE_ELECTRICITY]
     time_zone_gas = entry_data[CONF_TIME_ZONE_GAS]
-    gas_units_config = entry_data.get(CONF_GAS_UNITS, DEFAULT_GAS_UNITS)
 
     device_update_groups = {}
 
@@ -338,8 +329,6 @@ async def async_setup_entry(
             device_id,
             time_zone_electricity,
             time_zone_gas,
-            topic_prefix,
-            gas_units_config,
         )
         _LOGGER.debug("Received message: %s", topic)
         _LOGGER.debug("  Payload: %s", message.payload)
@@ -360,8 +349,6 @@ async def async_get_device_groups(
     device_id,
     time_zone_electricity,
     time_zone_gas,
-    topic_prefix,
-    gas_units_config,
 ):
     # add to update groups if not already there
     if device_id not in device_update_groups:
@@ -370,21 +357,20 @@ async def async_get_device_groups(
         groups = [
             HildebrandGlowMqttSensorUpdateGroup(
                 device_id=device_id,
-                topic_regex="STATE",
+                topic_suffix="/STATE",
                 meters=STATE_SENSORS,
             ),
             HildebrandGlowMqttSensorUpdateGroup(
                 device_id=device_id,
-                topic_regex="electricitymeter",
+                topic_suffix="/SENSOR/electricitymeter",
                 meters=ELECTRICITY_SENSORS,
                 time_zone=time_zone_electricity,
             ),
             HildebrandGlowMqttSensorUpdateGroup(
                 device_id=device_id,
-                topic_regex="gasmeter",
+                topic_suffix="/SENSOR/gasmeter",
                 meters=GAS_SENSORS,
                 time_zone=time_zone_gas,
-                gas_units_config=gas_units_config,
             ),
         ]
         async_add_entities(
@@ -405,18 +391,16 @@ class HildebrandGlowMqttSensorUpdateGroup:
     def __init__(
         self,
         device_id: str,
-        topic_regex: str,
+        topic_suffix: str,
         meters: Iterable,
         time_zone: str | None = None,
-        gas_units_config: str | None = None,
     ) -> None:
         """Initialize the sensor collection."""
-        self._topic_regex = re.compile(topic_regex)
+        self._topic_suffix = topic_suffix
         self._sensors = [
             HildebrandGlowMqttSensor(
                 device_id=device_id,
                 time_zone=time_zone,
-                gas_units_config=gas_units_config,
                 **meter,
             )
             for meter in meters
@@ -426,8 +410,8 @@ class HildebrandGlowMqttSensorUpdateGroup:
         """Process an update from the MQTT broker."""
         topic = message.topic
         payload = message.payload
-        if self._topic_regex.search(topic):
-            _LOGGER.debug("Matched on %s", self._topic_regex.pattern)
+        if topic.endswith(self._topic_suffix):
+            _LOGGER.debug("Matched on %s", self._topic_suffix)
             try:
                 parsed_data = json.loads(payload)
                 for sensor in self._sensors:
@@ -464,8 +448,6 @@ class HildebrandGlowMqttSensor(SensorEntity):
         entity_category: EntityCategory | None = None,
         ignore_zero_values: bool = False,
         meter_interval: MeterInterval | None = None,
-        is_volume_sensor: bool = False,
-        gas_units_config: str | None = None,
     ) -> None:
         """Initialize the sensor."""
         self._device_id = device_id
@@ -481,15 +463,10 @@ class HildebrandGlowMqttSensor(SensorEntity):
         self._attr_name = name
         self._attr_icon = icon
 
-        # Handle configurable gas units
-        if is_volume_sensor and gas_units_config == "m³":
-            self._attr_device_class = SensorDeviceClass.GAS
-            self._attr_native_unit_of_measurement = UnitOfVolume.CUBIC_METERS
-        else:
-            if device_class:
-                self._attr_device_class = device_class
-            if unit_of_measurement:
-                self._attr_native_unit_of_measurement = unit_of_measurement
+        if device_class:
+            self._attr_device_class = device_class
+        if unit_of_measurement:
+            self._attr_native_unit_of_measurement = unit_of_measurement
 
         if state_class:
             self._attr_state_class = state_class

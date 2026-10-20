@@ -13,12 +13,10 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import slugify
 
 from .const import (
-    CONF_GAS_UNITS,
     CONF_TIME_ZONE_ELECTRICITY,
     CONF_TIME_ZONE_GAS,
     CONF_TOPIC_PREFIX,
     DEFAULT_DEVICE_ID,
-    DEFAULT_GAS_UNITS,
     DEFAULT_TOPIC_PREFIX,
     DOMAIN,
 )
@@ -27,6 +25,8 @@ from .util import normalize_device_id, normalize_topic_prefix
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
+
+type GlowConfigEntry = ConfigEntry[dict[str, Any]]
 
 
 @callback
@@ -56,7 +56,7 @@ def _async_cleanup_stale_devices(
             )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GlowConfigEntry) -> bool:
     """Set up the Hildebrand Glow IHD MQTT config entry."""
 
     _LOGGER.debug("Setting up Hildebrand Glow IHD MQTT integration")
@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not await mqtt.async_wait_for_mqtt_client(hass):
         raise ConfigEntryNotReady("MQTT integration is not available")
 
-    entry_data = hass.data.setdefault(DOMAIN, {}).setdefault(entry.entry_id, {})
+    entry_data: dict[str, Any] = {}
 
     # Merge options over data so that options always win
     merged_entry: dict[str, Any] = {**entry.data, **entry.options}
@@ -85,9 +85,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry_data[CONF_TIME_ZONE_GAS] = merged_entry.get(
         CONF_TIME_ZONE_GAS, hass.config.time_zone
     )
-    entry_data[CONF_GAS_UNITS] = merged_entry.get(
-        CONF_GAS_UNITS, DEFAULT_GAS_UNITS
-    )
 
     # Keep the entry unique id in sync when the device id is changed via options
     expected_unique_id = f"{DOMAIN}_{entry_data[CONF_DEVICE_ID]}"
@@ -96,25 +93,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _async_cleanup_stale_devices(hass, entry, entry_data[CONF_DEVICE_ID])
 
+    entry.runtime_data = entry_data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     _LOGGER.debug("Finished setting up Hildebrand Glow IHD MQTT integration")
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GlowConfigEntry) -> bool:
     """Unload a Hildebrand Glow IHD MQTT config entry."""
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok and entry.entry_id in hass.data.get(DOMAIN, {}):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
-
-
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle config entry reload requests when options change."""
-
-    await hass.config_entries.async_reload(entry.entry_id)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

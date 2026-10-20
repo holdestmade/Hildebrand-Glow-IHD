@@ -6,12 +6,9 @@ DOMAIN: Final = "hildebrand_glow_ihd"
 CONF_TIME_ZONE_ELECTRICITY = "time_zone_electricity"
 CONF_TIME_ZONE_GAS = "time_zone_gas"
 CONF_TOPIC_PREFIX = "topic_prefix"
-CONF_GAS_UNITS = "gas_units"
 
 DEFAULT_DEVICE_ID = "+"
 DEFAULT_TOPIC_PREFIX = "glow"
-DEFAULT_GAS_UNITS = "kWh"
-GAS_UNITS_OPTIONS = ["kWh", "m³"]
 
 
 # Meter intervals

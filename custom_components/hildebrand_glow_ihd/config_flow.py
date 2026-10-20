@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import callback
@@ -20,15 +20,12 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
-    CONF_GAS_UNITS,
     CONF_TIME_ZONE_ELECTRICITY,
     CONF_TIME_ZONE_GAS,
     CONF_TOPIC_PREFIX,
     DEFAULT_DEVICE_ID,
-    DEFAULT_GAS_UNITS,
     DEFAULT_TOPIC_PREFIX,
     DOMAIN,
-    GAS_UNITS_OPTIONS,
 )
 from .util import normalize_device_id, normalize_topic_prefix
 
@@ -73,7 +70,6 @@ class HildebrandGlowIHDMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
             time_zone_gas = user_input.get(
                 CONF_TIME_ZONE_GAS, self.hass.config.time_zone
             )
-            gas_units = user_input.get(CONF_GAS_UNITS, DEFAULT_GAS_UNITS)
 
             await self.async_set_unique_id(f"{DOMAIN}_{device_id}")
             self._abort_if_unique_id_configured()
@@ -91,7 +87,6 @@ class HildebrandGlowIHDMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_TOPIC_PREFIX: topic_prefix,
                     CONF_TIME_ZONE_ELECTRICITY: time_zone_electricity,
                     CONF_TIME_ZONE_GAS: time_zone_gas,
-                    CONF_GAS_UNITS: gas_units,
                 },
             )
 
@@ -129,14 +124,6 @@ class HildebrandGlowIHDMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
                             sort=True,
                         )
                     ),
-                    vol.Required(
-                        CONF_GAS_UNITS, default=DEFAULT_GAS_UNITS
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=GAS_UNITS_OPTIONS,
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
                 }
             ),
             errors=errors,
@@ -150,19 +137,31 @@ class HildebrandGlowIHDMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
         return HildebrandGlowIHDMQTTOptionsFlowHandler()
 
 
-class HildebrandGlowIHDMQTTOptionsFlowHandler(OptionsFlow):
+class HildebrandGlowIHDMQTTOptionsFlowHandler(OptionsFlowWithReload):
     """Handle options flow for Hildebrand Glow IHD MQTT."""
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None):
         """Handle options flow."""
 
+        errors: dict[str, str] = {}
+
         if user_input is not None:
+            device_id = normalize_device_id(
+                user_input.get(CONF_DEVICE_ID, DEFAULT_DEVICE_ID), DEFAULT_DEVICE_ID
+            )
+            unique_id = f"{DOMAIN}_{device_id}"
+            if any(
+                entry.unique_id == unique_id
+                and entry.entry_id != self.config_entry.entry_id
+                for entry in self.hass.config_entries.async_entries(DOMAIN)
+            ):
+                errors[CONF_DEVICE_ID] = "already_configured"
+
+        if user_input is not None and not errors:
             return self.async_create_entry(
                 title="",
                 data={
-                    CONF_DEVICE_ID: normalize_device_id(
-                        user_input.get(CONF_DEVICE_ID, DEFAULT_DEVICE_ID), DEFAULT_DEVICE_ID
-                    ),
+                    CONF_DEVICE_ID: device_id,
                     CONF_TOPIC_PREFIX: normalize_topic_prefix(
                         user_input.get(CONF_TOPIC_PREFIX, DEFAULT_TOPIC_PREFIX),
                         DEFAULT_TOPIC_PREFIX,
@@ -173,7 +172,6 @@ class HildebrandGlowIHDMQTTOptionsFlowHandler(OptionsFlow):
                     CONF_TIME_ZONE_GAS: user_input.get(
                         CONF_TIME_ZONE_GAS, self.hass.config.time_zone
                     ),
-                    CONF_GAS_UNITS: user_input.get(CONF_GAS_UNITS, DEFAULT_GAS_UNITS),
                 },
             )
 
@@ -181,7 +179,8 @@ class HildebrandGlowIHDMQTTOptionsFlowHandler(OptionsFlow):
             _build_timezone_list
         )
 
-        current_config = _merge_entry_data(self.config_entry)
+        # Re-show the values just submitted when the form has errors
+        current_config = {**_merge_entry_data(self.config_entry), **(user_input or {})}
         current_device_id = normalize_device_id(
             current_config.get(CONF_DEVICE_ID, DEFAULT_DEVICE_ID), DEFAULT_DEVICE_ID
         )
@@ -195,7 +194,6 @@ class HildebrandGlowIHDMQTTOptionsFlowHandler(OptionsFlow):
         current_time_zone_gas = current_config.get(
             CONF_TIME_ZONE_GAS, self.hass.config.time_zone
         )
-        current_gas_units = current_config.get(CONF_GAS_UNITS, DEFAULT_GAS_UNITS)
 
         data_schema = vol.Schema(
             {
@@ -227,15 +225,8 @@ class HildebrandGlowIHDMQTTOptionsFlowHandler(OptionsFlow):
                         sort=True,
                     )
                 ),
-                vol.Required(
-                    CONF_GAS_UNITS,
-                    default=current_gas_units,
-                ): SelectSelector(
-                    SelectSelectorConfig(
-                        options=GAS_UNITS_OPTIONS,
-                        mode=SelectSelectorMode.DROPDOWN,
-                    )
-                ),
             }
         )
-        return self.async_show_form(step_id="init", data_schema=data_schema)
+        return self.async_show_form(
+            step_id="init", data_schema=data_schema, errors=errors
+        )
