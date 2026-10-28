@@ -12,6 +12,22 @@ This repository contains a custom [Home Assistant](https://www.home-assistant.io
 - Handles both electricity and gas metrics, with gas reported in both kWh and m³.
 - Depends on the core MQTT integration and listens for locally published updates (`iot_class: local_push`).
 
+## Devices
+
+Each Glow IHD is split into three devices:
+
+| Device | Entities |
+| --- | --- |
+| **Smart Meter IHD** | Software version, hardware, last seen, HAN status, RSSI and LQI |
+| **Smart Meter Electricity** | Import/export energy, power, unit rate, standing charge and cost |
+| **Smart Meter Gas** | Import energy and volume, unit rate, standing charge and cost |
+
+The electricity and gas meters are linked to the IHD as devices connected *via* it, since they are separate meters that report through the IHD's Zigbee HAN.
+
+### Upgrading from 2.x
+
+Entity unique ids are unchanged, so existing entities, their history and Energy dashboard statistics carry over. The existing device becomes **Smart Meter IHD** and the meter entities move to the new electricity and gas devices. Entity ids are kept; only the friendly names change slightly (for example `Smart Meter Electricity: Import` becomes `Smart Meter Electricity Import`).
+
 ## Installation
 
 ### HACS (recommended)
@@ -47,7 +63,7 @@ These settings can be changed later from the integration's **Configure** button.
 
 ## Requirements
 
-- Home Assistant 2025.10.0 or newer.
+- Home Assistant 2026.8.0 or newer.
 - An operational MQTT broker receiving Glow IHD telemetry.
 
 For issues or feature requests, please use the [GitHub issue tracker](https://github.com/holdestmade/Hildebrand-Glow-IHD/issues).
