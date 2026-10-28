@@ -1,5 +1,5 @@
 {
   "name": "Hildebrand Glow IHD MQTT",
-  "homeassistant": "2025.10.0",
+  "homeassistant": "2026.8.0",
   "render_readme": true
 }

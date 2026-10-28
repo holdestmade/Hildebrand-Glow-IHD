@@ -25,7 +25,8 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
@@ -33,11 +34,14 @@ from .const import (
     CONF_TIME_ZONE_ELECTRICITY,
     CONF_TIME_ZONE_GAS,
     CONF_TOPIC_PREFIX,
+    DOMAIN,
     MeterInterval,
 )
 from . import GlowConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+MANUFACTURER = "Hildebrand Technology Limited"
 
 # glow/XXXXXXYYYYYY/STATE                   {"software":"v1.8.12","timestamp":"2022-06-11T20:54:53Z","hardware":"GLOW-IHD-01-1v4-SMETS2","ethmac":"1234567890AB","smetsversion":"SMETS2","eui":"12:34:56:78:91:23:45","zigbee":"1.2.5","han":{"rssi":-75,"status":"joined","lqi":100}}
 # glow/XXXXXXYYYYYY/SENSOR/electricitymeter {"electricitymeter":{"timestamp":"2022-06-11T20:38:00Z","energy":{"export":{"cumulative":0.000,"units":"kWh"},"import":{"cumulative":6613.405,"day":13.252,"week":141.710,"month":293.598,"units":"kWh","mpan":"1234","supplier":"ABC ENERGY","price":{"unitrate":0.04998,"standingcharge":0.24030}}},"power":{"value":0.951,"units":"kW"}}}
@@ -45,7 +49,8 @@ _LOGGER = logging.getLogger(__name__)
 
 STATE_SENSORS = [
     {
-        "name": "Smart Meter IHD Software Version",
+        "key": "Smart Meter IHD Software Version",
+        "name": "Software Version",
         "device_class": None,
         "unit_of_measurement": None,
         "state_class": None,
@@ -54,7 +59,8 @@ STATE_SENSORS = [
         "func": lambda js: js["software"],
     },
     {
-        "name": "Smart Meter IHD Last Seen",
+        "key": "Smart Meter IHD Last Seen",
+        "name": "Last Seen",
         "device_class": SensorDeviceClass.TIMESTAMP,
         "unit_of_measurement": None,
         "state_class": None,
@@ -65,7 +71,8 @@ STATE_SENSORS = [
         ),
     },
     {
-        "name": "Smart Meter IHD Hardware",
+        "key": "Smart Meter IHD Hardware",
+        "name": "Hardware",
         "device_class": None,
         "unit_of_measurement": None,
         "state_class": None,
@@ -74,7 +81,8 @@ STATE_SENSORS = [
         "func": lambda js: js["hardware"],
     },
     {
-        "name": "Smart Meter IHD HAN Status",
+        "key": "Smart Meter IHD HAN Status",
+        "name": "HAN Status",
         "device_class": None,
         "unit_of_measurement": None,
         "state_class": None,
@@ -83,7 +91,8 @@ STATE_SENSORS = [
         "func": lambda js: js["han"]["status"],
     },
     {
-        "name": "Smart Meter IHD HAN RSSI",
+        "key": "Smart Meter IHD HAN RSSI",
+        "name": "HAN RSSI",
         "device_class": SensorDeviceClass.SIGNAL_STRENGTH,
         "unit_of_measurement": SIGNAL_STRENGTH_DECIBELS,
         "state_class": SensorStateClass.MEASUREMENT,
@@ -92,7 +101,8 @@ STATE_SENSORS = [
         "func": lambda js: js["han"]["rssi"],
     },
     {
-        "name": "Smart Meter IHD HAN LQI",
+        "key": "Smart Meter IHD HAN LQI",
+        "name": "HAN LQI",
         "device_class": None,
         "unit_of_measurement": None,
         "state_class": SensorStateClass.MEASUREMENT,
@@ -104,7 +114,8 @@ STATE_SENSORS = [
 
 ELECTRICITY_SENSORS = [
     {
-        "name": "Smart Meter Electricity: Export",
+        "key": "Smart Meter Electricity: Export",
+        "name": "Export",
         "device_class": SensorDeviceClass.ENERGY,
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -112,7 +123,8 @@ ELECTRICITY_SENSORS = [
         "func": lambda js: js["electricitymeter"]["energy"]["export"]["cumulative"],
     },
     {
-        "name": "Smart Meter Electricity: Import",
+        "key": "Smart Meter Electricity: Import",
+        "name": "Import",
         "device_class": SensorDeviceClass.ENERGY,
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -121,7 +133,8 @@ ELECTRICITY_SENSORS = [
         "ignore_zero_values": True,
     },
     {
-        "name": "Smart Meter Electricity: Import (Today)",
+        "key": "Smart Meter Electricity: Import (Today)",
+        "name": "Import (Today)",
         "device_class": SensorDeviceClass.ENERGY,
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -129,7 +142,8 @@ ELECTRICITY_SENSORS = [
         "func": lambda js: js["electricitymeter"]["energy"]["import"]["day"],
     },
     {
-        "name": "Smart Meter Electricity: Import (This week)",
+        "key": "Smart Meter Electricity: Import (This week)",
+        "name": "Import (This week)",
         "device_class": SensorDeviceClass.ENERGY,
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -137,7 +151,8 @@ ELECTRICITY_SENSORS = [
         "func": lambda js: js["electricitymeter"]["energy"]["import"]["week"],
     },
     {
-        "name": "Smart Meter Electricity: Import (This month)",
+        "key": "Smart Meter Electricity: Import (This month)",
+        "name": "Import (This month)",
         "device_class": SensorDeviceClass.ENERGY,
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -145,7 +160,8 @@ ELECTRICITY_SENSORS = [
         "func": lambda js: js["electricitymeter"]["energy"]["import"]["month"],
     },
     {
-        "name": "Smart Meter Electricity: Import Unit Rate",
+        "key": "Smart Meter Electricity: Import Unit Rate",
+        "name": "Import Unit Rate",
         "device_class": SensorDeviceClass.MONETARY,
         "unit_of_measurement": "GBP/kWh",
         "state_class": None,
@@ -156,7 +172,8 @@ ELECTRICITY_SENSORS = [
         "ignore_zero_values": True,
     },
     {
-        "name": "Smart Meter Electricity: Import Standing Charge",
+        "key": "Smart Meter Electricity: Import Standing Charge",
+        "name": "Import Standing Charge",
         "device_class": SensorDeviceClass.MONETARY,
         "unit_of_measurement": "GBP",
         "state_class": None,
@@ -167,7 +184,8 @@ ELECTRICITY_SENSORS = [
         "ignore_zero_values": True,
     },
     {
-        "name": "Smart Meter Electricity: Power",
+        "key": "Smart Meter Electricity: Power",
+        "name": "Power",
         "device_class": SensorDeviceClass.POWER,
         "unit_of_measurement": UnitOfPower.KILO_WATT,
         "state_class": SensorStateClass.MEASUREMENT,
@@ -175,7 +193,8 @@ ELECTRICITY_SENSORS = [
         "func": lambda js: js["electricitymeter"]["power"]["value"],
     },
     {
-        "name": "Smart Meter Electricity: Cost (Today)",
+        "key": "Smart Meter Electricity: Cost (Today)",
+        "name": "Cost (Today)",
         "device_class": SensorDeviceClass.MONETARY,
         "unit_of_measurement": "GBP",
         "state_class": SensorStateClass.TOTAL,
@@ -194,7 +213,8 @@ ELECTRICITY_SENSORS = [
 
 GAS_SENSORS = [
     {
-        "name": "Smart Meter Gas: Import",
+        "key": "Smart Meter Gas: Import",
+        "name": "Import",
         "device_class": SensorDeviceClass.ENERGY,
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -203,7 +223,8 @@ GAS_SENSORS = [
         "ignore_zero_values": True,
     },
     {
-        "name": "Smart Meter Gas: Import Vol",
+        "key": "Smart Meter Gas: Import Vol",
+        "name": "Import Vol",
         "device_class": SensorDeviceClass.GAS,
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -212,7 +233,8 @@ GAS_SENSORS = [
         "ignore_zero_values": True,
     },
     {
-        "name": "Smart Meter Gas: Import Vol (Today)",
+        "key": "Smart Meter Gas: Import Vol (Today)",
+        "name": "Import Vol (Today)",
         "device_class": SensorDeviceClass.GAS,
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -220,7 +242,8 @@ GAS_SENSORS = [
         "func": lambda js: js["gasmeter"]["energy"]["import"]["dayvol"],
     },
     {
-        "name": "Smart Meter Gas: Import Vol (This week)",
+        "key": "Smart Meter Gas: Import Vol (This week)",
+        "name": "Import Vol (This week)",
         "device_class": SensorDeviceClass.GAS,
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -228,7 +251,8 @@ GAS_SENSORS = [
         "func": lambda js: js["gasmeter"]["energy"]["import"]["weekvol"],
     },
     {
-        "name": "Smart Meter Gas: Import Vol (This month)",
+        "key": "Smart Meter Gas: Import Vol (This month)",
+        "name": "Import Vol (This month)",
         "device_class": SensorDeviceClass.GAS,
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -236,7 +260,8 @@ GAS_SENSORS = [
         "func": lambda js: js["gasmeter"]["energy"]["import"]["monthvol"],
     },
     {
-        "name": "Smart Meter Gas: Import (Today)",
+        "key": "Smart Meter Gas: Import (Today)",
+        "name": "Import (Today)",
         "device_class": SensorDeviceClass.ENERGY,
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -244,7 +269,8 @@ GAS_SENSORS = [
         "func": lambda js: js["gasmeter"]["energy"]["import"]["day"],
     },
     {
-        "name": "Smart Meter Gas: Import (This week)",
+        "key": "Smart Meter Gas: Import (This week)",
+        "name": "Import (This week)",
         "device_class": SensorDeviceClass.ENERGY,
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -252,7 +278,8 @@ GAS_SENSORS = [
         "func": lambda js: js["gasmeter"]["energy"]["import"]["week"],
     },
     {
-        "name": "Smart Meter Gas: Import (This month)",
+        "key": "Smart Meter Gas: Import (This month)",
+        "name": "Import (This month)",
         "device_class": SensorDeviceClass.ENERGY,
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -260,7 +287,8 @@ GAS_SENSORS = [
         "func": lambda js: js["gasmeter"]["energy"]["import"]["month"],
     },
     {
-        "name": "Smart Meter Gas: Import Unit Rate",
+        "key": "Smart Meter Gas: Import Unit Rate",
+        "name": "Import Unit Rate",
         "device_class": SensorDeviceClass.MONETARY,
         "unit_of_measurement": "GBP/kWh",
         "state_class": None,
@@ -269,7 +297,8 @@ GAS_SENSORS = [
         "ignore_zero_values": True,
     },
     {
-        "name": "Smart Meter Gas: Import Standing Charge",
+        "key": "Smart Meter Gas: Import Standing Charge",
+        "name": "Import Standing Charge",
         "device_class": SensorDeviceClass.MONETARY,
         "unit_of_measurement": "GBP",
         "state_class": None,
@@ -280,7 +309,8 @@ GAS_SENSORS = [
         "ignore_zero_values": True,
     },
     {
-        "name": "Smart Meter Gas: Cost (Today)",
+        "key": "Smart Meter Gas: Cost (Today)",
+        "name": "Cost (Today)",
         "device_class": SensorDeviceClass.MONETARY,
         "unit_of_measurement": "GBP",
         "state_class": SensorStateClass.TOTAL,
@@ -323,7 +353,9 @@ async def async_setup_entry(
             return
         device_id = topic_parts[0]
 
-        update_groups = await async_get_device_groups(
+        update_groups = async_get_device_groups(
+            hass,
+            config_entry,
             device_update_groups,
             async_add_entities,
             device_id,
@@ -343,7 +375,9 @@ async def async_setup_entry(
     )
 
 
-async def async_get_device_groups(
+def async_get_device_groups(
+    hass: HomeAssistant,
+    config_entry: GlowConfigEntry,
     device_update_groups,
     async_add_entities,
     device_id,
@@ -354,20 +388,49 @@ async def async_get_device_groups(
     if device_id not in device_update_groups:
         _LOGGER.debug("New device found: %s", device_id)
 
+        # The IHD is the hub; the meters are separate devices joined to its HAN.
+        # Register it up front so the meters can reference it via via_device_id.
+        ihd_device_fields: dict[str, Any] = {
+            "identifiers": {(DOMAIN, device_id)},
+            "connections": {(CONNECTION_NETWORK_MAC, device_id)},
+            "manufacturer": MANUFACTURER,
+            "model": "Glow Smart Meter IHD",
+            "name": "Smart Meter IHD",
+        }
+        ihd_device_info = DeviceInfo(**ihd_device_fields)
+        ihd_device = dr.async_get(hass).async_get_or_create(
+            config_entry_id=config_entry.entry_id, **ihd_device_fields
+        )
+        electricity_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{device_id}_electricitymeter")},
+            model="Electricity meter",
+            name="Smart Meter Electricity",
+            via_device_id=ihd_device.id,
+        )
+        gas_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{device_id}_gasmeter")},
+            model="Gas meter",
+            name="Smart Meter Gas",
+            via_device_id=ihd_device.id,
+        )
+
         groups = [
             HildebrandGlowMqttSensorUpdateGroup(
                 device_id=device_id,
+                device_info=ihd_device_info,
                 topic_suffix="/STATE",
                 meters=STATE_SENSORS,
             ),
             HildebrandGlowMqttSensorUpdateGroup(
                 device_id=device_id,
+                device_info=electricity_device_info,
                 topic_suffix="/SENSOR/electricitymeter",
                 meters=ELECTRICITY_SENSORS,
                 time_zone=time_zone_electricity,
             ),
             HildebrandGlowMqttSensorUpdateGroup(
                 device_id=device_id,
+                device_info=gas_device_info,
                 topic_suffix="/SENSOR/gasmeter",
                 meters=GAS_SENSORS,
                 time_zone=time_zone_gas,
@@ -391,6 +454,7 @@ class HildebrandGlowMqttSensorUpdateGroup:
     def __init__(
         self,
         device_id: str,
+        device_info: DeviceInfo,
         topic_suffix: str,
         meters: Iterable,
         time_zone: str | None = None,
@@ -400,6 +464,7 @@ class HildebrandGlowMqttSensorUpdateGroup:
         self._sensors = [
             HildebrandGlowMqttSensor(
                 device_id=device_id,
+                device_info=device_info,
                 time_zone=time_zone,
                 **meter,
             )
@@ -435,10 +500,14 @@ class HildebrandGlowMqttSensorUpdateGroup:
 class HildebrandGlowMqttSensor(SensorEntity):
     """Representation of a room sensor that is updated via MQTT."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         device_id: str,
+        device_info: DeviceInfo,
         time_zone: str | None,
+        key: str,
         name: str,
         icon: str,
         device_class: SensorDeviceClass | None,
@@ -471,19 +540,16 @@ class HildebrandGlowMqttSensor(SensorEntity):
         if state_class:
             self._attr_state_class = state_class
 
-        self._attr_unique_id = slugify(device_id + "_" + name)
+        # Unique ids are based on the original full sensor names so existing
+        # entities (and their history) carry over to the new devices.
+        self._attr_unique_id = slugify(device_id + "_" + key)
         self._attr_should_poll = False
         self._func = func
         self._attr_entity_category = entity_category
         self._ignore_zero_values = ignore_zero_values
         self._meter_interval = meter_interval
 
-        self._attr_device_info = DeviceInfo(
-            connections={("mac", device_id)},
-            manufacturer="Hildebrand Technology Limited",
-            model="Glow Smart Meter IHD",
-            name=f"Glow Smart Meter {device_id}",
-        )
+        self._attr_device_info = device_info
         self._attr_native_value = None
         self._last_reset_reported = False
         if state_class == SensorStateClass.TOTAL and meter_interval:
