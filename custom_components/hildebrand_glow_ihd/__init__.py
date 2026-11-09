@@ -1,4 +1,4 @@
-"""Setup for the Hildebrand Glow IHD MQTT integration."""
+"""Setup for the Hildebrand Glow IHD integration."""
 from __future__ import annotations
 
 import logging
@@ -57,9 +57,9 @@ def _async_cleanup_stale_devices(
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GlowConfigEntry) -> bool:
-    """Set up the Hildebrand Glow IHD MQTT config entry."""
+    """Set up the Hildebrand Glow IHD config entry."""
 
-    _LOGGER.debug("Setting up Hildebrand Glow IHD MQTT integration")
+    _LOGGER.debug("Setting up Hildebrand Glow IHD integration")
 
     if not await mqtt.async_wait_for_mqtt_client(hass):
         raise ConfigEntryNotReady("MQTT integration is not available")
@@ -96,11 +96,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: GlowConfigEntry) -> bool
     entry.runtime_data = entry_data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    _LOGGER.debug("Finished setting up Hildebrand Glow IHD MQTT integration")
+    _LOGGER.debug("Finished setting up Hildebrand Glow IHD integration")
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: GlowConfigEntry) -> bool:
-    """Unload a Hildebrand Glow IHD MQTT config entry."""
+    """Unload a Hildebrand Glow IHD config entry."""
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

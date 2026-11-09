@@ -1,4 +1,4 @@
-"""Config flow for Hildebrand Glow IHD MQTT."""
+"""Config flow for Hildebrand Glow IHD."""
 from __future__ import annotations
 
 import zoneinfo
@@ -138,7 +138,7 @@ class HildebrandGlowIHDMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class HildebrandGlowIHDMQTTOptionsFlowHandler(OptionsFlowWithReload):
-    """Handle options flow for Hildebrand Glow IHD MQTT."""
+    """Handle options flow for Hildebrand Glow IHD."""
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None):
         """Handle options flow."""

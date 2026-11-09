@@ -38,7 +38,7 @@ This integration is not in the HACS default store, so add it as a custom reposit
 1. Make sure [HACS](https://hacs.xyz/docs/use/) is installed in your Home Assistant instance.
 2. In Home Assistant, open **HACS**, then select the **⋮** menu in the top-right corner and choose **Custom repositories**.
 3. Enter `https://github.com/holdestmade/Hildebrand-Glow-IHD` as the repository and select **Integration** as the type, then select **Add**.
-4. Search HACS for **Hildebrand Glow IHD MQTT**, open it and select **Download**.
+4. Search HACS for **Hildebrand Glow IHD**, open it and select **Download**.
 5. Restart Home Assistant.
 
 Or use this button to open the repository in HACS directly:
@@ -57,7 +57,7 @@ Updates are offered through HACS whenever a new release is published.
 
 1. Ensure the MQTT integration is configured and receiving messages from your Glow IHD.
 2. In Home Assistant, go to **Settings → Devices & Services → Add Integration**.
-3. Search for **Hildebrand Glow IHD MQTT** and follow the on-screen prompts.
+3. Search for **Hildebrand Glow IHD** and follow the on-screen prompts.
 4. Provide the Glow device ID (defaults to `+` for broadcast), the MQTT topic prefix (defaults to `glow`), and select appropriate time zones for electricity and gas data.
 
 These settings can be changed later from the integration's **Configure** button.
