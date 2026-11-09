@@ -1,4 +1,4 @@
-"""Support for hildebrand glow MQTT sensors."""
+"""Support for Hildebrand Glow IHD sensors."""
 
 from __future__ import annotations
 from collections.abc import Iterable
@@ -480,7 +480,7 @@ def async_get_device_groups(
 
 
 class HildebrandGlowMqttSensorUpdateGroup:
-    """Representation of Hildebrand Glow MQTT Meter Sensors that all get updated together."""
+    """Representation of Hildebrand Glow IHD sensors that all get updated together."""
 
     def __init__(
         self,

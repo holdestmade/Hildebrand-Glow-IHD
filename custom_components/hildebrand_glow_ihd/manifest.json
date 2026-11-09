@@ -1,6 +1,6 @@
 {
     "domain": "hildebrand_glow_ihd",
-    "name": "Hildebrand Glow IHD MQTT",
+    "name": "Hildebrand Glow IHD",
     "codeowners": ["@holdestmade"],
     "config_flow": true,
     "dependencies": ["mqtt"],
