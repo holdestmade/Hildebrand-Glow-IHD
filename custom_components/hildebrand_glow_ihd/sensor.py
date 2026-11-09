@@ -25,7 +25,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
@@ -47,17 +47,13 @@ MANUFACTURER = "Hildebrand Technology Limited"
 # glow/XXXXXXYYYYYY/SENSOR/electricitymeter {"electricitymeter":{"timestamp":"2022-06-11T20:38:00Z","energy":{"export":{"cumulative":0.000,"units":"kWh"},"import":{"cumulative":6613.405,"day":13.252,"week":141.710,"month":293.598,"units":"kWh","mpan":"1234","supplier":"ABC ENERGY","price":{"unitrate":0.04998,"standingcharge":0.24030}}},"power":{"value":0.951,"units":"kW"}}}
 # glow/XXXXXXYYYYYY/SENSOR/gasmeter         {"gasmeter":{"timestamp":"2022-06-11T20:53:52Z","energy":{"export":{"cumulative":0.000,"units":"kWh"},"import":{"cumulative":17940.852,"day":11.128,"week":104.749,"month":217.122,"units":"kWh","mprn":"1234","supplier":"---","price":{"unitrate":0.07320,"standingcharge":0.17850}}},"power":{"value":0.000,"units":"kW"}}}
 
+# Sensors replaced by the IHD device's software/hardware version fields.
+REMOVED_SENSOR_KEYS = (
+    "Smart Meter IHD Software Version",
+    "Smart Meter IHD Hardware",
+)
+
 STATE_SENSORS = [
-    {
-        "key": "Smart Meter IHD Software Version",
-        "name": "Software Version",
-        "device_class": None,
-        "unit_of_measurement": None,
-        "state_class": None,
-        "entity_category": EntityCategory.DIAGNOSTIC,
-        "icon": "mdi:information-outline",
-        "func": lambda js: js["software"],
-    },
     {
         "key": "Smart Meter IHD Last Seen",
         "name": "Last Seen",
@@ -69,16 +65,6 @@ STATE_SENSORS = [
         "func": lambda js: (
             datetime.fromisoformat(ts) if (ts := js.get("timestamp")) else None
         ),
-    },
-    {
-        "key": "Smart Meter IHD Hardware",
-        "name": "Hardware",
-        "device_class": None,
-        "unit_of_measurement": None,
-        "state_class": None,
-        "entity_category": EntityCategory.DIAGNOSTIC,
-        "icon": "mdi:information-outline",
-        "func": lambda js: js["hardware"],
     },
     {
         "key": "Smart Meter IHD HAN Status",
@@ -341,6 +327,8 @@ async def async_setup_entry(
     time_zone_electricity = entry_data[CONF_TIME_ZONE_ELECTRICITY]
     time_zone_gas = entry_data[CONF_TIME_ZONE_GAS]
 
+    _async_remove_obsolete_entities(hass, config_entry)
+
     device_update_groups = {}
 
     async def mqtt_message_received(message: ReceiveMessage):
@@ -367,12 +355,55 @@ async def async_setup_entry(
         for update_group in update_groups:
             update_group.process_update(message)
 
+        if topic_parts[1] == "STATE" and len(topic_parts) == 2:
+            async_update_ihd_versions(hass, device_id, message.payload)
+
     # Let the broker filter for the configured device ("+" subscribes to all)
     data_topic = f"{topic_prefix}/{device_mac}/#"
 
     config_entry.async_on_unload(
         await mqtt.async_subscribe(hass, data_topic, mqtt_message_received, 1)
     )
+
+
+def _async_remove_obsolete_entities(
+    hass: HomeAssistant, config_entry: GlowConfigEntry
+) -> None:
+    """Remove entities for sensors that are now shown on the IHD device page."""
+    entity_registry = er.async_get(hass)
+    suffixes = tuple(f"_{slugify(key)}" for key in REMOVED_SENSOR_KEYS)
+    for entity in er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    ):
+        if entity.unique_id.endswith(suffixes):
+            _LOGGER.debug("Removing obsolete entity %s", entity.entity_id)
+            entity_registry.async_remove(entity.entity_id)
+
+
+def async_update_ihd_versions(
+    hass: HomeAssistant, device_id: str, payload: str | bytes
+) -> None:
+    """Update the IHD device's software and hardware versions from a STATE message."""
+    try:
+        data = json.loads(payload)
+    except json.JSONDecodeError:
+        return
+    if not isinstance(data, dict):
+        return
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+    if device is None:
+        return
+
+    changes: dict[str, str] = {}
+    if (software := data.get("software")) and device.sw_version != software:
+        changes["sw_version"] = software
+    if (hardware := data.get("hardware")) and device.hw_version != hardware:
+        changes["hw_version"] = hardware
+    if changes:
+        _LOGGER.debug("Updating IHD %s versions: %s", device_id, changes)
+        device_registry.async_update_device(device.id, **changes)
 
 
 def async_get_device_groups(

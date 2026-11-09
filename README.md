@@ -18,7 +18,7 @@ Each Glow IHD is split into three devices:
 
 | Device | Entities |
 | --- | --- |
-| **Smart Meter IHD** | Software version, hardware, last seen, HAN status, RSSI and LQI |
+| **Smart Meter IHD** | Last seen, HAN status, RSSI and LQI. The software and hardware versions are shown on the device page. |
 | **Smart Meter Electricity** | Import/export energy, power, unit rate, standing charge and cost |
 | **Smart Meter Gas** | Import energy and volume, unit rate, standing charge and cost |
 
