@@ -2,7 +2,7 @@
 [![Marketplace | HACS](https://img.shields.io/badge/Marketplace%20%7C%20HACS-Default-41BDF5)](#install)
 [![AI Assisted](https://img.shields.io/badge/AI--assisted-Claude-8A2BE2?logo=anthropic&logoColor=white)](#ai-disclosure)
 
-# Hildebrand Glow IHD MQTT Home Assistant Integration
+# Hildebrand Glow IHD Home Assistant Integration
 
 This repository contains a custom [Home Assistant](https://www.home-assistant.io/) integration that exposes the telemetry published by a Hildebrand Glow In-Home Display (IHD) over MQTT.  It parses the topics emitted by the Glow IHD and creates Home Assistant sensors for electricity and gas consumption, device status, and supporting metadata.
 
