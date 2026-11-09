@@ -330,6 +330,8 @@ async def async_setup_entry(
     _async_remove_obsolete_entities(hass, config_entry)
 
     device_update_groups = {}
+    # Device registry ids of the IHD devices, keyed by the IHD's MAC/device id
+    ihd_device_ids: dict[str, str] = {}
 
     async def mqtt_message_received(message: ReceiveMessage):
         """Handle received MQTT message."""
@@ -345,6 +347,7 @@ async def async_setup_entry(
             hass,
             config_entry,
             device_update_groups,
+            ihd_device_ids,
             async_add_entities,
             device_id,
             time_zone_electricity,
@@ -356,7 +359,9 @@ async def async_setup_entry(
             update_group.process_update(message)
 
         if topic_parts[1] == "STATE" and len(topic_parts) == 2:
-            async_update_ihd_versions(hass, device_id, message.payload)
+            async_update_ihd_versions(
+                hass, ihd_device_ids[device_id], message.payload
+            )
 
     # Let the broker filter for the configured device ("+" subscribes to all)
     data_topic = f"{topic_prefix}/{device_mac}/#"
@@ -381,7 +386,7 @@ def _async_remove_obsolete_entities(
 
 
 def async_update_ihd_versions(
-    hass: HomeAssistant, device_id: str, payload: str | bytes
+    hass: HomeAssistant, ihd_device_id: str, payload: str | bytes
 ) -> None:
     """Update the IHD device's software and hardware versions from a STATE message."""
     try:
@@ -392,7 +397,7 @@ def async_update_ihd_versions(
         return
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+    device = device_registry.async_get(ihd_device_id)
     if device is None:
         return
 
@@ -402,7 +407,7 @@ def async_update_ihd_versions(
     if (hardware := data.get("hardware")) and device.hw_version != hardware:
         changes["hw_version"] = hardware
     if changes:
-        _LOGGER.debug("Updating IHD %s versions: %s", device_id, changes)
+        _LOGGER.debug("Updating IHD %s versions: %s", device.name, changes)
         device_registry.async_update_device(device.id, **changes)
 
 
@@ -410,6 +415,7 @@ def async_get_device_groups(
     hass: HomeAssistant,
     config_entry: GlowConfigEntry,
     device_update_groups,
+    ihd_device_ids,
     async_add_entities,
     device_id,
     time_zone_electricity,
@@ -432,6 +438,7 @@ def async_get_device_groups(
         ihd_device = dr.async_get(hass).async_get_or_create(
             config_entry_id=config_entry.entry_id, **ihd_device_fields
         )
+        ihd_device_ids[device_id] = ihd_device.id
         electricity_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{device_id}_electricitymeter")},
             model="Electricity meter",
