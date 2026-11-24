@@ -19,21 +19,25 @@ Each Glow IHD is split into three devices:
 
 | Device | Entities |
 | --- | --- |
-| **Smart meter IHD** | Last seen, HAN status, HAN RSSI, HAN LQI. The software and hardware versions are shown on the device page. |
-| **Smart meter electricity** | Export, Import, Import today, Import this week, Import this month, Import unit rate, Import standing charge, Power, Cost today |
-| **Smart meter gas** | Import, Import today, Import this week, Import this month, Import volume, Import volume today, Import volume this week, Import volume this month, Import unit rate, Import standing charge, Cost today |
+| **In-home display** | Last seen, HAN status, HAN RSSI, HAN LQI. The software and hardware versions are shown on the device page. |
+| **Electric smart meter** | Export, Import, Import today, Import this week, Import this month, Import unit rate, Import standing charge, Power, Cost today |
+| **Gas smart meter** | Import, Import today, Import this week, Import this month, Import volume, Import volume today, Import volume this week, Import volume this month, Import unit rate, Import standing charge, Cost today |
 
 The HAN RSSI and HAN LQI icons show 0–4 signal bars based on the current reading.
 
 The electricity and gas meters are linked to the IHD as devices connected *via* it, since they are separate meters that report through the IHD's Zigbee HAN.
 
+### Upgrading to 3.3.2
+
+The devices are renamed to **In-home display**, **Electric smart meter** and **Gas smart meter**, so entities show as, for example, `Gas smart meter Import today`. Devices you have renamed yourself keep your name. Entity ids, history and Energy dashboard statistics are kept.
+
 ### Upgrading to 3.3.0
 
-Entity names now use sentence case without brackets, and the gas "Vol" entities are spelled "volume" (for example `Import (Today)` becomes `Import today`, `Import Vol (This week)` becomes `Import volume this week`, and `Import Unit Rate` becomes `Import unit rate`). The devices are renamed to **Smart meter IHD**, **Smart meter electricity** and **Smart meter gas**, so entities show as, for example, `Smart meter gas Import today`. Devices you have renamed yourself keep your name. Only the friendly names change; entity ids, history and Energy dashboard statistics are kept.
+Entity names now use sentence case without brackets, and the gas "Vol" entities are spelled "volume" (for example `Import (Today)` becomes `Import today`, `Import Vol (This week)` becomes `Import volume this week`, and `Import Unit Rate` becomes `Import unit rate`). Only the friendly names change; entity ids, history and Energy dashboard statistics are kept.
 
 ### Upgrading from 2.x
 
-Entity unique ids are unchanged, so existing entities, their history and Energy dashboard statistics carry over. The existing device becomes **Smart meter IHD** and the meter entities move to the new electricity and gas devices. Entity ids are kept; only the friendly names change slightly (for example `Smart Meter Electricity: Import` becomes `Smart meter electricity Import`).
+Entity unique ids are unchanged, so existing entities, their history and Energy dashboard statistics carry over. The existing device becomes **In-home display** and the meter entities move to the new electricity and gas devices. Entity ids are kept; only the friendly names change slightly (for example `Smart Meter Electricity: Import` becomes `Electric smart meter Import`).
 
 ## Installation
 
