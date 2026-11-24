@@ -84,7 +84,7 @@ REMOVED_SENSOR_KEYS = (
 STATE_SENSORS = [
     {
         "key": "Smart Meter IHD Last Seen",
-        "name": "Last Seen",
+        "name": "Last seen",
         "device_class": SensorDeviceClass.TIMESTAMP,
         "unit_of_measurement": None,
         "state_class": None,
@@ -96,7 +96,7 @@ STATE_SENSORS = [
     },
     {
         "key": "Smart Meter IHD HAN Status",
-        "name": "HAN Status",
+        "name": "HAN status",
         "device_class": None,
         "unit_of_measurement": None,
         "state_class": None,
@@ -150,7 +150,7 @@ ELECTRICITY_SENSORS = [
     },
     {
         "key": "Smart Meter Electricity: Import (Today)",
-        "name": "Import (Today)",
+        "name": "Import today",
         "device_class": SensorDeviceClass.ENERGY,
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -159,7 +159,7 @@ ELECTRICITY_SENSORS = [
     },
     {
         "key": "Smart Meter Electricity: Import (This week)",
-        "name": "Import (This week)",
+        "name": "Import this week",
         "device_class": SensorDeviceClass.ENERGY,
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -168,7 +168,7 @@ ELECTRICITY_SENSORS = [
     },
     {
         "key": "Smart Meter Electricity: Import (This month)",
-        "name": "Import (This month)",
+        "name": "Import this month",
         "device_class": SensorDeviceClass.ENERGY,
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -177,7 +177,7 @@ ELECTRICITY_SENSORS = [
     },
     {
         "key": "Smart Meter Electricity: Import Unit Rate",
-        "name": "Import Unit Rate",
+        "name": "Import unit rate",
         "device_class": SensorDeviceClass.MONETARY,
         "unit_of_measurement": "GBP/kWh",
         "state_class": None,
@@ -189,7 +189,7 @@ ELECTRICITY_SENSORS = [
     },
     {
         "key": "Smart Meter Electricity: Import Standing Charge",
-        "name": "Import Standing Charge",
+        "name": "Import standing charge",
         "device_class": SensorDeviceClass.MONETARY,
         "unit_of_measurement": "GBP",
         "state_class": None,
@@ -210,7 +210,7 @@ ELECTRICITY_SENSORS = [
     },
     {
         "key": "Smart Meter Electricity: Cost (Today)",
-        "name": "Cost (Today)",
+        "name": "Cost today",
         "device_class": SensorDeviceClass.MONETARY,
         "unit_of_measurement": "GBP",
         "state_class": SensorStateClass.TOTAL,
@@ -240,7 +240,7 @@ GAS_SENSORS = [
     },
     {
         "key": "Smart Meter Gas: Import Vol",
-        "name": "Import Vol",
+        "name": "Import volume",
         "device_class": SensorDeviceClass.GAS,
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -250,7 +250,7 @@ GAS_SENSORS = [
     },
     {
         "key": "Smart Meter Gas: Import Vol (Today)",
-        "name": "Import Vol (Today)",
+        "name": "Import volume today",
         "device_class": SensorDeviceClass.GAS,
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -259,7 +259,7 @@ GAS_SENSORS = [
     },
     {
         "key": "Smart Meter Gas: Import Vol (This week)",
-        "name": "Import Vol (This week)",
+        "name": "Import volume this week",
         "device_class": SensorDeviceClass.GAS,
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -268,7 +268,7 @@ GAS_SENSORS = [
     },
     {
         "key": "Smart Meter Gas: Import Vol (This month)",
-        "name": "Import Vol (This month)",
+        "name": "Import volume this month",
         "device_class": SensorDeviceClass.GAS,
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -277,7 +277,7 @@ GAS_SENSORS = [
     },
     {
         "key": "Smart Meter Gas: Import (Today)",
-        "name": "Import (Today)",
+        "name": "Import today",
         "device_class": SensorDeviceClass.ENERGY,
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -286,7 +286,7 @@ GAS_SENSORS = [
     },
     {
         "key": "Smart Meter Gas: Import (This week)",
-        "name": "Import (This week)",
+        "name": "Import this week",
         "device_class": SensorDeviceClass.ENERGY,
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -295,7 +295,7 @@ GAS_SENSORS = [
     },
     {
         "key": "Smart Meter Gas: Import (This month)",
-        "name": "Import (This month)",
+        "name": "Import this month",
         "device_class": SensorDeviceClass.ENERGY,
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -304,7 +304,7 @@ GAS_SENSORS = [
     },
     {
         "key": "Smart Meter Gas: Import Unit Rate",
-        "name": "Import Unit Rate",
+        "name": "Import unit rate",
         "device_class": SensorDeviceClass.MONETARY,
         "unit_of_measurement": "GBP/kWh",
         "state_class": None,
@@ -314,7 +314,7 @@ GAS_SENSORS = [
     },
     {
         "key": "Smart Meter Gas: Import Standing Charge",
-        "name": "Import Standing Charge",
+        "name": "Import standing charge",
         "device_class": SensorDeviceClass.MONETARY,
         "unit_of_measurement": "GBP",
         "state_class": None,
@@ -326,7 +326,7 @@ GAS_SENSORS = [
     },
     {
         "key": "Smart Meter Gas: Cost (Today)",
-        "name": "Cost (Today)",
+        "name": "Cost today",
         "device_class": SensorDeviceClass.MONETARY,
         "unit_of_measurement": "GBP",
         "state_class": SensorStateClass.TOTAL,

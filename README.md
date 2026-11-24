@@ -19,11 +19,17 @@ Each Glow IHD is split into three devices:
 
 | Device | Entities |
 | --- | --- |
-| **Smart Meter IHD** | Last seen, HAN status, RSSI and LQI. The software and hardware versions are shown on the device page. |
-| **Smart Meter Electricity** | Import/export energy, power, unit rate, standing charge and cost |
-| **Smart Meter Gas** | Import energy and volume, unit rate, standing charge and cost |
+| **Smart Meter IHD** | Last seen, HAN status, HAN RSSI, HAN LQI. The software and hardware versions are shown on the device page. |
+| **Smart Meter Electricity** | Export, Import, Import today, Import this week, Import this month, Import unit rate, Import standing charge, Power, Cost today |
+| **Smart Meter Gas** | Import, Import today, Import this week, Import this month, Import volume, Import volume today, Import volume this week, Import volume this month, Import unit rate, Import standing charge, Cost today |
+
+The HAN RSSI and HAN LQI icons show 0–4 signal bars based on the current reading.
 
 The electricity and gas meters are linked to the IHD as devices connected *via* it, since they are separate meters that report through the IHD's Zigbee HAN.
+
+### Upgrading to 3.3.0
+
+Entity names now use sentence case without brackets, and the gas "Vol" entities are spelled "volume" (for example `Import (Today)` becomes `Import today`, `Import Vol (This week)` becomes `Import volume this week`, and `Import Unit Rate` becomes `Import unit rate`). Only the friendly names change; entity ids, history and Energy dashboard statistics are kept.
 
 ### Upgrading from 2.x
 
