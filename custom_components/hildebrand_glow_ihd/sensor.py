@@ -67,7 +67,7 @@ def _signal_icon(value: Any, thresholds: tuple[float, float, float, float]) -> s
 
 def rssi_icon(value: Any) -> str:
     """Return a signal icon for a Zigbee RSSI value (dBm)."""
-    return _signal_icon(value, (-60, -70, -80, -90))
+    return _signal_icon(value, (-30, -40, -50, -60))
 
 
 def lqi_icon(value: Any) -> str:
