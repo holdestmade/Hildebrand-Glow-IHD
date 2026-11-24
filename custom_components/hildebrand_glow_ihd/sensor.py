@@ -84,7 +84,7 @@ REMOVED_SENSOR_KEYS = (
 STATE_SENSORS = [
     {
         "key": "Smart Meter IHD Last Seen",
-        "name": "Last Seen",
+        "name": "Last seen",
         "device_class": SensorDeviceClass.TIMESTAMP,
         "unit_of_measurement": None,
         "state_class": None,
@@ -96,7 +96,7 @@ STATE_SENSORS = [
     },
     {
         "key": "Smart Meter IHD HAN Status",
-        "name": "HAN Status",
+        "name": "HAN status",
         "device_class": None,
         "unit_of_measurement": None,
         "state_class": None,
@@ -177,7 +177,7 @@ ELECTRICITY_SENSORS = [
     },
     {
         "key": "Smart Meter Electricity: Import Unit Rate",
-        "name": "Import Unit Rate",
+        "name": "Import unit rate",
         "device_class": SensorDeviceClass.MONETARY,
         "unit_of_measurement": "GBP/kWh",
         "state_class": None,
@@ -189,7 +189,7 @@ ELECTRICITY_SENSORS = [
     },
     {
         "key": "Smart Meter Electricity: Import Standing Charge",
-        "name": "Import Standing Charge",
+        "name": "Import standing charge",
         "device_class": SensorDeviceClass.MONETARY,
         "unit_of_measurement": "GBP",
         "state_class": None,
@@ -304,7 +304,7 @@ GAS_SENSORS = [
     },
     {
         "key": "Smart Meter Gas: Import Unit Rate",
-        "name": "Import Unit Rate",
+        "name": "Import unit rate",
         "device_class": SensorDeviceClass.MONETARY,
         "unit_of_measurement": "GBP/kWh",
         "state_class": None,
@@ -314,7 +314,7 @@ GAS_SENSORS = [
     },
     {
         "key": "Smart Meter Gas: Import Standing Charge",
-        "name": "Import Standing Charge",
+        "name": "Import standing charge",
         "device_class": SensorDeviceClass.MONETARY,
         "unit_of_measurement": "GBP",
         "state_class": None,
