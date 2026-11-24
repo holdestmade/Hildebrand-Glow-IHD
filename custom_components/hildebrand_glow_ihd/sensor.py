@@ -462,7 +462,7 @@ def async_get_device_groups(
             "connections": {(CONNECTION_NETWORK_MAC, device_id)},
             "manufacturer": MANUFACTURER,
             "model": "Glow Smart Meter IHD",
-            "name": "Smart Meter IHD",
+            "name": "Smart meter IHD",
         }
         ihd_device_info = DeviceInfo(**ihd_device_fields)
         ihd_device = dr.async_get(hass).async_get_or_create(
@@ -472,13 +472,13 @@ def async_get_device_groups(
         electricity_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{device_id}_electricitymeter")},
             model="Electricity meter",
-            name="Smart Meter Electricity",
+            name="Smart meter electricity",
             via_device_id=ihd_device.id,
         )
         gas_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{device_id}_gasmeter")},
             model="Gas meter",
-            name="Smart Meter Gas",
+            name="Smart meter gas",
             via_device_id=ihd_device.id,
         )
 
