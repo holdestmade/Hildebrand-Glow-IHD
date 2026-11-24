@@ -240,7 +240,7 @@ GAS_SENSORS = [
     },
     {
         "key": "Smart Meter Gas: Import Vol",
-        "name": "Import Vol",
+        "name": "Import volume",
         "device_class": SensorDeviceClass.GAS,
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -250,7 +250,7 @@ GAS_SENSORS = [
     },
     {
         "key": "Smart Meter Gas: Import Vol (Today)",
-        "name": "Import Vol today",
+        "name": "Import volume today",
         "device_class": SensorDeviceClass.GAS,
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -259,7 +259,7 @@ GAS_SENSORS = [
     },
     {
         "key": "Smart Meter Gas: Import Vol (This week)",
-        "name": "Import Vol this week",
+        "name": "Import volume this week",
         "device_class": SensorDeviceClass.GAS,
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -268,7 +268,7 @@ GAS_SENSORS = [
     },
     {
         "key": "Smart Meter Gas: Import Vol (This month)",
-        "name": "Import Vol this month",
+        "name": "Import volume this month",
         "device_class": SensorDeviceClass.GAS,
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "state_class": SensorStateClass.TOTAL_INCREASING,
