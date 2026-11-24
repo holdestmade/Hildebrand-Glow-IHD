@@ -150,7 +150,7 @@ ELECTRICITY_SENSORS = [
     },
     {
         "key": "Smart Meter Electricity: Import (Today)",
-        "name": "Import (Today)",
+        "name": "Import today",
         "device_class": SensorDeviceClass.ENERGY,
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -159,7 +159,7 @@ ELECTRICITY_SENSORS = [
     },
     {
         "key": "Smart Meter Electricity: Import (This week)",
-        "name": "Import (This week)",
+        "name": "Import this week",
         "device_class": SensorDeviceClass.ENERGY,
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -168,7 +168,7 @@ ELECTRICITY_SENSORS = [
     },
     {
         "key": "Smart Meter Electricity: Import (This month)",
-        "name": "Import (This month)",
+        "name": "Import this month",
         "device_class": SensorDeviceClass.ENERGY,
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -210,7 +210,7 @@ ELECTRICITY_SENSORS = [
     },
     {
         "key": "Smart Meter Electricity: Cost (Today)",
-        "name": "Cost (Today)",
+        "name": "Cost today",
         "device_class": SensorDeviceClass.MONETARY,
         "unit_of_measurement": "GBP",
         "state_class": SensorStateClass.TOTAL,
@@ -250,7 +250,7 @@ GAS_SENSORS = [
     },
     {
         "key": "Smart Meter Gas: Import Vol (Today)",
-        "name": "Import Vol (Today)",
+        "name": "Import Vol today",
         "device_class": SensorDeviceClass.GAS,
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -259,7 +259,7 @@ GAS_SENSORS = [
     },
     {
         "key": "Smart Meter Gas: Import Vol (This week)",
-        "name": "Import Vol (This week)",
+        "name": "Import Vol this week",
         "device_class": SensorDeviceClass.GAS,
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -268,7 +268,7 @@ GAS_SENSORS = [
     },
     {
         "key": "Smart Meter Gas: Import Vol (This month)",
-        "name": "Import Vol (This month)",
+        "name": "Import Vol this month",
         "device_class": SensorDeviceClass.GAS,
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -277,7 +277,7 @@ GAS_SENSORS = [
     },
     {
         "key": "Smart Meter Gas: Import (Today)",
-        "name": "Import (Today)",
+        "name": "Import today",
         "device_class": SensorDeviceClass.ENERGY,
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -286,7 +286,7 @@ GAS_SENSORS = [
     },
     {
         "key": "Smart Meter Gas: Import (This week)",
-        "name": "Import (This week)",
+        "name": "Import this week",
         "device_class": SensorDeviceClass.ENERGY,
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -295,7 +295,7 @@ GAS_SENSORS = [
     },
     {
         "key": "Smart Meter Gas: Import (This month)",
-        "name": "Import (This month)",
+        "name": "Import this month",
         "device_class": SensorDeviceClass.ENERGY,
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "state_class": SensorStateClass.TOTAL_INCREASING,
@@ -326,7 +326,7 @@ GAS_SENSORS = [
     },
     {
         "key": "Smart Meter Gas: Cost (Today)",
-        "name": "Cost (Today)",
+        "name": "Cost today",
         "device_class": SensorDeviceClass.MONETARY,
         "unit_of_measurement": "GBP",
         "state_class": SensorStateClass.TOTAL,
