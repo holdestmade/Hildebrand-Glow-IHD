@@ -1,7 +1,7 @@
 """Support for Hildebrand Glow IHD sensors."""
 
 from __future__ import annotations
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from datetime import datetime, time, timedelta, tzinfo
 import json
 import logging
@@ -47,6 +47,34 @@ MANUFACTURER = "Hildebrand Technology Limited"
 # glow/XXXXXXYYYYYY/SENSOR/electricitymeter {"electricitymeter":{"timestamp":"2022-06-11T20:38:00Z","energy":{"export":{"cumulative":0.000,"units":"kWh"},"import":{"cumulative":6613.405,"day":13.252,"week":141.710,"month":293.598,"units":"kWh","mpan":"1234","supplier":"ABC ENERGY","price":{"unitrate":0.04998,"standingcharge":0.24030}}},"power":{"value":0.951,"units":"kW"}}}
 # glow/XXXXXXYYYYYY/SENSOR/gasmeter         {"gasmeter":{"timestamp":"2022-06-11T20:53:52Z","energy":{"export":{"cumulative":0.000,"units":"kWh"},"import":{"cumulative":17940.852,"day":11.128,"week":104.749,"month":217.122,"units":"kWh","mprn":"1234","supplier":"---","price":{"unitrate":0.07320,"standingcharge":0.17850}}},"power":{"value":0.000,"units":"kW"}}}
 
+
+def _signal_icon(value: Any, thresholds: tuple[float, float, float, float]) -> str:
+    """Return a Wi-Fi style signal strength icon for a value.
+
+    ``thresholds`` are the minimum values for 4, 3, 2 and 1 bars respectively.
+    """
+    if value is None:
+        return "mdi:wifi-strength-off-outline"
+    try:
+        value = float(value)
+    except (TypeError, ValueError):
+        return "mdi:wifi-strength-alert-outline"
+    for bars, threshold in zip((4, 3, 2, 1), thresholds):
+        if value >= threshold:
+            return f"mdi:wifi-strength-{bars}"
+    return "mdi:wifi-strength-outline"
+
+
+def rssi_icon(value: Any) -> str:
+    """Return a signal icon for a Zigbee RSSI value (dBm)."""
+    return _signal_icon(value, (-60, -70, -80, -90))
+
+
+def lqi_icon(value: Any) -> str:
+    """Return a signal icon for a Zigbee LQI value (0-255)."""
+    return _signal_icon(value, (200, 150, 100, 50))
+
+
 # Sensors replaced by the IHD device's software/hardware version fields.
 REMOVED_SENSOR_KEYS = (
     "Smart Meter IHD Software Version",
@@ -74,7 +102,7 @@ STATE_SENSORS = [
         "state_class": None,
         "entity_category": EntityCategory.DIAGNOSTIC,
         "icon": "mdi:information-outline",
-        "func": lambda js: js["han"]["status"],
+        "func": lambda js: str(js["han"]["status"]).capitalize(),
     },
     {
         "key": "Smart Meter IHD HAN RSSI",
@@ -83,7 +111,8 @@ STATE_SENSORS = [
         "unit_of_measurement": SIGNAL_STRENGTH_DECIBELS,
         "state_class": SensorStateClass.MEASUREMENT,
         "entity_category": EntityCategory.DIAGNOSTIC,
-        "icon": "mdi:wifi-strength-outline",
+        "icon": "mdi:wifi-strength-off-outline",
+        "icon_func": rssi_icon,
         "func": lambda js: js["han"]["rssi"],
     },
     {
@@ -93,7 +122,8 @@ STATE_SENSORS = [
         "unit_of_measurement": None,
         "state_class": SensorStateClass.MEASUREMENT,
         "entity_category": EntityCategory.DIAGNOSTIC,
-        "icon": "mdi:wifi-strength-outline",
+        "icon": "mdi:wifi-strength-off-outline",
+        "icon_func": lqi_icon,
         "func": lambda js: js["han"]["lqi"],
     },
 ]
@@ -555,6 +585,7 @@ class HildebrandGlowMqttSensor(SensorEntity):
         entity_category: EntityCategory | None = None,
         ignore_zero_values: bool = False,
         meter_interval: MeterInterval | None = None,
+        icon_func: Callable[[Any], str] | None = None,
     ) -> None:
         """Initialize the sensor."""
         self._device_id = device_id
@@ -569,6 +600,7 @@ class HildebrandGlowMqttSensor(SensorEntity):
                 )
         self._attr_name = name
         self._attr_icon = icon
+        self._icon_func = icon_func
 
         if device_class:
             self._attr_device_class = device_class
@@ -636,6 +668,8 @@ class HildebrandGlowMqttSensor(SensorEntity):
             )
             return
         self._attr_native_value = new_value
+        if self._icon_func is not None:
+            self._attr_icon = self._icon_func(new_value)
 
         zone_info = self._zone_info
         if zone_info is None and self.hass is not None and self.hass.config is not None:
